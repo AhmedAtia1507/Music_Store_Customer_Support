@@ -1,0 +1,8 @@
+.streamlit
+FinalProject_venv
+Databases/__pycache__
+__pycache__
+Graph/__pycache__
+Tests
+Utils/__pycache__
+.env
