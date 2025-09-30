@@ -73,7 +73,7 @@ The application will open at `http://localhost:8501`
 ## 🏗️ Architecture
 
 ### System Overview
-![alt text](image.png)
+<img width="1452" height="330" alt="Project_Structure" src="https://github.com/user-attachments/assets/219319ac-7c8e-453b-8e71-902c172bae74" />
 
 ### Project Structure
 ```
