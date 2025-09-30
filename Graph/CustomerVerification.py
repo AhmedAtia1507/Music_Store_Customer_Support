@@ -1,4 +1,3 @@
-from ast import List
 from typing import Optional
 from langgraph.types import interrupt
 from pydantic import BaseModel, Field
@@ -7,7 +6,6 @@ from langchain_openai import ChatOpenAI
 from Databases.CustomerDatabase import CustomerDatabase
 from Utils.GraphInnerState import GraphInnerState
 from langchain_core.messages import SystemMessage, HumanMessage
-from langgraph.graph import MessagesState
 
 class CustomerData(BaseModel):
     """

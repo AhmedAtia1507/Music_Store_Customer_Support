@@ -3,7 +3,6 @@ import requests # Library for making HTTP requests (to download the SQL script)
 from langchain_community.utilities.sql_database import SQLDatabase # LangChain utility to interact with SQL databases
 from sqlalchemy import create_engine, text # SQLAlchemy function to create a database engine
 from sqlalchemy.pool import StaticPool # SQLAlchemy connection pool class for in-memory databases
-from langchain_core.tools import tool # LangChain decorator to define tools
 
 class MusicDatabase:
     """Class to represent a music database."""

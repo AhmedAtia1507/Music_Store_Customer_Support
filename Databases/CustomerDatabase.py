@@ -1,6 +1,5 @@
 import sqlite3
 import threading
-from langchain_core.tools import tool
 
 class CustomerDatabase:
     _instance = None
@@ -187,8 +186,6 @@ class CustomerDatabase:
                 cursor = conn.cursor()
                 cursor.execute("SELECT * FROM invoices WHERE customer_id = ? ORDER BY date DESC", (customer_id,))
                 rows = cursor.fetchall()
-                print("Retrieved Invoices:", rows)
-                print("Customer ID:", customer_id)
                 return [{"invoice_id": row[0], "customer_id": row[1], "amount": row[2], "date": row[3], "employee_name": row[4]} for row in rows]
                 
         except sqlite3.Error as e:
