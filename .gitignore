@@ -6,3 +6,5 @@ Graph/__pycache__
 Tests
 Utils/__pycache__
 .env
+app.log
+Customers.db
