@@ -33,6 +33,7 @@ class StreamlitCustomerSupportApp:
         """Initialize session state variables"""
         if 'threads' not in st.session_state:
             st.session_state.threads = ["Default Thread"]
+            st.session_state.messages = {"Default Thread": []}
         
         if 'query_graph' not in st.session_state:
             st.session_state.query_graph = None
@@ -64,15 +65,15 @@ class StreamlitCustomerSupportApp:
             
             st.session_state.model_name = st.selectbox (
                 "Select Language Model",
-                options=["gpt-5", "gpt-4o", "gpt-3.5-turbo"],
-                index=1
+                options=["openai/gpt-oss-120b", "openai/gpt-oss-20b", "moonshotai/kimi-k2-instruct-0905", "meta-llama/llama-4-maverick-17b-128e-instruct"],
+                index=0
             )
             st.session_state.api_key = st.text_input(
-                "Enter your OpenAI API Key",
+                "Enter your Groq API Key",
                 type="password"
             )
             if st.session_state.api_key:
-                os.environ["OPENAI_API_KEY"] = st.session_state.api_key
+                os.environ["GROQ_API_KEY"] = st.session_state.api_key
                 st.success("API Key set successfully!")
                 if st.session_state.query_graph is None or st.session_state.query_graph.model_name != st.session_state.model_name:
                     with st.spinner("Loading customer support system..."):
@@ -80,7 +81,7 @@ class StreamlitCustomerSupportApp:
                 else:
                     st.info("Customer support system is already loaded with the selected model.")
             else:
-                st.warning("Please enter your OpenAI API Key to enable the support system.")
+                st.warning("Please enter your Groq API Key to enable the support system.")
             
             st.markdown("---")
             st.session_state.current_thread_id = st.selectbox(
@@ -94,18 +95,16 @@ class StreamlitCustomerSupportApp:
     
     def display_chat_messages(self):
         """Display chat messages in the main area"""
-        if st.session_state.compiled_graph and list(st.session_state.compiled_graph.get_state_history(
-            {"configurable": {"thread_id": st.session_state.current_thread_id}}
-        )) != []:
-            latest_state = st.session_state.compiled_graph.invoke(None, {"configurable": {"thread_id": st.session_state.current_thread_id}})
-            print(latest_state)
-            for message in latest_state["messages"]:
-                if isinstance(message, HumanMessage):
-                    with st.chat_message("human"):
-                        st.markdown(message.content)
-                elif isinstance(message, AIMessage) and not hasattr(message, "tool_calls"):
-                    with st.chat_message("assistant"):
-                        st.markdown(message.content)
+        if st.session_state.current_thread_id not in st.session_state.messages:
+            st.session_state.messages[st.session_state.current_thread_id] = []
+        
+        for message in st.session_state.messages[st.session_state.current_thread_id]:
+            if isinstance(message, HumanMessage):
+                with st.chat_message("user"):
+                    st.markdown(message.content)
+            elif isinstance(message, AIMessage):
+                with st.chat_message("assistant"):
+                    st.markdown(message.content)
                         
 
     def handle_user_input(self, user_input: str):
@@ -117,7 +116,7 @@ class StreamlitCustomerSupportApp:
         try:
             with st.chat_message("user"):
                 st.markdown(user_input)
-            
+            st.session_state.messages[st.session_state.current_thread_id].append(HumanMessage(content=user_input))
             # Show thinking indicator
             with st.chat_message("assistant"):
                 with st.spinner("Processing your request..."):
@@ -144,6 +143,7 @@ class StreamlitCustomerSupportApp:
                     else:
                         # Display the assistant's response
                         st.markdown(response["messages"][-1].content)
+                        st.session_state.messages[st.session_state.current_thread_id].append(AIMessage(content=response["messages"][-1].content))
         
         except Exception as e:
             logger.error(f"Error processing user input: {e}")

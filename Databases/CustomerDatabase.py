@@ -93,7 +93,6 @@ class CustomerDatabase:
             with self._get_connection() as conn:
                 cursor = conn.cursor()
                 cursor.executemany("INSERT INTO invoices (id,customer_id, amount, date, employee_name) VALUES (?, ?, ?, ?, ?)", sample_invoices)
-                print(cursor.rowcount, "invoices inserted.")
                 conn.commit()
         except sqlite3.Error as e:
             print(f"Error populating invoice sample data: {e}")

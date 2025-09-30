@@ -9,13 +9,13 @@ from Databases.CustomerDatabase import CustomerDatabase
 from langgraph_supervisor import create_supervisor
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.store.memory import InMemoryStore
-from langchain_openai import ChatOpenAI
+from langchain_groq import ChatGroq
 from langmem.short_term import SummarizationNode
 from langchain_core.messages.utils import count_tokens_approximately
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 
 class CustomerQueryGraph:
-    def __init__(self, model_name: str = "gpt-4o"):
+    def __init__(self, model_name: str = "openai/gpt-oss-120b"):
         self.model_name = model_name
         self.verification = CustomerVerification(model_name=model_name)
         self.preferences = CustomerPreferences(model_name=model_name)
@@ -30,7 +30,7 @@ class CustomerQueryGraph:
 
     def create_multi_agent_system(self):
         self.music_catalog_agent = create_react_agent(
-            model=ChatOpenAI(model=self.model_name),
+            model=ChatGroq(model=self.model_name),
             tools=[
                 self.musicDatabase.get_albums_by_artist,
                 self.musicDatabase.get_tracks_by_artist,
@@ -49,8 +49,8 @@ class CustomerQueryGraph:
                 You are a music catalog assistant. You have access to a music database and can provide information about artists, albums, tracks, and genres. \n\n
                 INSTRUCTIONS:\n
                 - Always use the provided tools to get information from the music database. Do not make up information.\n
-                - If the user asks for recommendations, suggest music based on their preferences.\n
-                - If the user asks for information about a specific artist, album, track, or genre, use the appropriate tool to fetch the information.\n
+                - If the user asks for recommendations, suggest music from the music database based on their preferences.\n
+                - If the user asks for information about a specific artist, album, track, or genre, use the appropriate tool to fetch the information from the music database.\n
                 - Summarize the music information if there are multiple items as bullet points.\n
                 - After you are done with your tasks, respond to the supervisor directly.\n
                 """),
@@ -61,7 +61,7 @@ class CustomerQueryGraph:
         )
         
         self.invoice_info_agent = create_react_agent(
-            model=ChatOpenAI(model=self.model_name),
+            model=ChatGroq(model=self.model_name),
             tools=[
                 self.customerDatabase.get_invoices_by_customer_sorted_by_date,
                 self.customerDatabase.get_invoices_sorted_by_unit_price,
@@ -84,7 +84,7 @@ class CustomerQueryGraph:
         )
 
         self.supervisor_agent = create_supervisor(
-            model=ChatOpenAI(model=self.model_name),
+            model=ChatGroq(model=self.model_name),
             agents=[self.music_catalog_agent, self.invoice_info_agent],
             prompt=ChatPromptTemplate.from_messages([
                 ("system", """
@@ -110,13 +110,18 @@ class CustomerQueryGraph:
 
         self.supervisor_agent = self.supervisor_agent.compile()
     
+    def should_verify_customer(self, state: GraphInnerState) -> bool:
+        if "customer_id" not in state or state["customer_id"] is None:
+            return True
+        return False
+
     def build_graph(self):
         if not self.music_catalog_agent or not self.invoice_info_agent or not self.supervisor_agent:
             self.create_multi_agent_system()
         
         self.summarization_node = SummarizationNode(
-            model=ChatOpenAI(model=self.model_name),
-            max_tokens=10000,
+            model=ChatGroq(model=self.model_name),
+            max_tokens=8000,
             token_counter=count_tokens_approximately,
             max_tokens_before_summary=4000,
             max_summary_tokens=4000,
@@ -130,10 +135,14 @@ class CustomerQueryGraph:
         graphBuilder.add_node("save_preferences", self.preferences.save_preferences)
         
         graphBuilder.add_edge(START, "summarize_conversation")
-        graphBuilder.add_edge("summarize_conversation", "verify_customer")
+        
         graphBuilder.add_edge("verify_customer", "extract_preferences")
         graphBuilder.add_edge("extract_preferences", "supervisor_agent")
         graphBuilder.add_edge("supervisor_agent", "save_preferences")
 
+        graphBuilder.add_conditional_edges("summarize_conversation", self.should_verify_customer, {
+            True: "verify_customer",
+            False: "extract_preferences"
+        })
         return graphBuilder.compile(checkpointer=self.checkpointer, store=self.memory_store)
     
