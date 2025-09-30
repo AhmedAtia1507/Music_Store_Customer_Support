@@ -63,6 +63,8 @@ class MusicDatabase:
         """
         with self.db_engine.connect() as conn:
             res = conn.execute(text(query), {"artist_name": artist_name})
+            if len(res.fetchall()) == 0:
+                return ""
             return [dict(row._mapping) for row in res]
     
     def get_tracks_by_artist(self, artist_name: str) -> list[dict]:
@@ -79,6 +81,8 @@ class MusicDatabase:
         """
         with self.db_engine.connect() as conn:
             res = conn.execute(text(query), {"artist_name": artist_name})
+            if len(res.fetchall()) == 0:
+                return ""
             return [dict(row._mapping) for row in res]
     
     def get_songs_by_genre(self, genre_name: str) -> list[dict]:
@@ -96,6 +100,8 @@ class MusicDatabase:
         """
         with self.db_engine.connect() as conn:
             res = conn.execute(text(query), {"genre_name": genre_name})
+            if len(res.fetchall()) == 0:
+                return ""
             return [dict(row._mapping) for row in res]
 
     def check_for_track(self, track_name: str) -> bool:
@@ -132,6 +138,8 @@ class MusicDatabase:
         query = "SELECT Name FROM Artist ORDER BY Name ASC LIMIT 5;"
         with self.db_engine.connect() as conn:
             res = conn.execute(text(query))
+            if len(res.fetchall()) == 0:
+                return ""
             return [row[0] for row in res.fetchall()]
 
     def get_all_genres(self) -> list[str]:
@@ -141,6 +149,8 @@ class MusicDatabase:
         query = "SELECT Name FROM Genre ORDER BY Name ASC LIMIT 5;"
         with self.db_engine.connect() as conn:
             res = conn.execute(text(query))
+            if len(res.fetchall()) == 0:
+                return ""
             return [row[0] for row in res.fetchall()]
 
     def get_all_albums(self) -> list[str]:
@@ -150,6 +160,8 @@ class MusicDatabase:
         query = "SELECT Title FROM Album ORDER BY Title ASC LIMIT 5;"
         with self.db_engine.connect() as conn:
             res = conn.execute(text(query))
+            if len(res.fetchall()) == 0:
+                return ""
             return [row[0] for row in res.fetchall()]
 
     def search_tracks(self, search_term: str) -> list[dict]:
@@ -169,6 +181,8 @@ class MusicDatabase:
         """
         with self.db_engine.connect() as conn:
             res = conn.execute(text(query), {"like_term": like_term})
+            if len(res.fetchall()) == 0:
+                return ""
             return [dict(row._mapping) for row in res]
 
     def search_albums(self, search_term: str) -> list[dict]:
@@ -186,4 +200,6 @@ class MusicDatabase:
         """
         with self.db_engine.connect() as conn:
             res = conn.execute(text(query), {"like_term": like_term})
+            if len(res.fetchall()) == 0:
+                return ""
             return [dict(row._mapping) for row in res]

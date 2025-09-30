@@ -51,6 +51,7 @@ class CustomerQueryGraph:
                 - Always use the provided tools to get information from the music database. Do not make up information.\n
                 - If the user asks for recommendations, suggest music from the music database based on their preferences.\n
                 - If the user asks for information about a specific artist, album, track, or genre, use the appropriate tool to fetch the information from the music database.\n
+                - If the tool returns nothing for a query, respond with "No data found" instead of making up information.\n
                 - Summarize the music information if there are multiple items as bullet points.\n
                 - After you are done with your tasks, respond to the supervisor directly.\n
                 """),
@@ -74,6 +75,7 @@ class CustomerQueryGraph:
                 - Customer ID is {customer_id}. You will find it in the graph state
                 - Always use the provided tools to get information from the customer database. Do not make up information.
                 - If the user asks for information about their invoices, use the appropriate tool to fetch the information.\n
+                - If the tool returns nothing for a query, respond with "No data found" instead of making up information.\n
                 - Summarize the invoice information if there are multiple invoices.\n
                 - After you are done with your tasks, respond to the supervisor directly.\n
                 """),
