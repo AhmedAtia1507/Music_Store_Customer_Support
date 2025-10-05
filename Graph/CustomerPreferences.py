@@ -29,9 +29,9 @@ class CustomerPreferences:
             - Here is a list of genres to consider:
             ["Alternative", "Alternative & Punk", "Blues", "Bossa Nova", "Classical", "Comedy", "Drama", "Easy Listening", "Electronica/Dance", "Heavy Metal", "Hip Hop/Rap", "Jazz", "Latin", "Metal", "Opera", "Pop", "R&B/Soul", "Reggae", "Rock", "Rock And Roll", "Sci Fi & Fantasy", "Science Fiction", "Soundtrack", "TV Shows", "World"]
             - Distinguish the type of mention:
-                * If the customer explicitly likes/enjoys/loves → record as "Customer likes ... So he likes ..." (mention the genre that fits best from the list)
-                * If the customer asks about or is curious → record as "Customer asked about ... So he likes ..." (mention the genre that fits best from the list)
-                * If the customer explicitly dislikes/hates → record as "Customer dislikes ... So he dislikes ..." (mention the genre that fits best from the list)
+                * If the customer explicitly likes/enjoys/loves → record as "Customer loves ... So he loves ..." (mention the genre that fits best from the list)
+                * If the customer asks about or is curious → record as "Customer asked about ... So he loves ..." (mention the genre that fits best from the list)
+                * If the customer explicitly dislikes/hates → record as "Customer dislikes ... So he hates ..." (mention the genre that fits best from the list)
             - Always write in the third person.
             - If the input has no music-related mentions, respond with "No preferences found."
             - Avoid repeating items already listed in previous preferences.

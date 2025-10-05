@@ -78,20 +78,31 @@ class StreamlitCustomerSupportApp:
                 if st.session_state.query_graph is None or st.session_state.query_graph.model_name != st.session_state.model_name:
                     with st.spinner("Loading customer support system..."):
                         st.session_state.compiled_graph = self.get_query_graph(model_name=st.session_state.model_name)
+                        st.session_state.messages = {thread: [] for thread in st.session_state.threads}
+                        st.success("Customer support system loaded successfully!")
+                        st.session_state.awaiting_verification = False
                 else:
                     st.info("Customer support system is already loaded with the selected model.")
             else:
                 st.warning("Please enter your Groq API Key to enable the support system.")
             
             st.markdown("---")
+            previous_thread = st.session_state.get('current_thread_id', st.session_state.threads[0])
             st.session_state.current_thread_id = st.selectbox(
                 "Select Conversation Thread",
                 options=st.session_state.threads if 'threads' in st.session_state else [],
                 index=0
             )
+
+            # Reset verification flag when switching threads
+            if previous_thread != st.session_state.current_thread_id:
+                st.session_state.awaiting_verification = False
+
             if st.button("Add New Thread"):
                 new_thread_id = f"Thread {len(st.session_state.threads) + 1}"
                 st.session_state.threads.append(new_thread_id)
+                st.session_state.awaiting_verification = False
+                st.rerun()
     
     def display_chat_messages(self):
         """Display chat messages in the main area"""

@@ -49,7 +49,7 @@ class CustomerQueryGraph:
                 You are a music catalog assistant. You have access to a music database and can provide information about artists, albums, tracks, and genres. \n\n
                 INSTRUCTIONS:\n
                 - Always use the provided tools to get information from the music database. Do not make up information.\n
-                - If the user asks for recommendations, suggest music from the music database based on their preferences.\n
+                - If the user asks for recommendations, suggest music from the music database based on their preferences provided in the graph state.\n
                 - If the user asks for information about a specific artist, album, track, or genre, use the appropriate tool to fetch the information from the music database.\n
                 - If the tool returns nothing for a query, respond with "No data found" instead of making up information.\n
                 - Summarize the music information if there are multiple items as bullet points.\n
@@ -85,7 +85,7 @@ class CustomerQueryGraph:
             state_schema=GraphInnerState
         )
 
-        self.supervisor_agent = create_supervisor(
+        supervisor_builder = create_supervisor(
             model=ChatGroq(model=self.model_name),
             agents=[self.music_catalog_agent, self.invoice_info_agent],
             prompt=ChatPromptTemplate.from_messages([
@@ -109,8 +109,7 @@ class CustomerQueryGraph:
             add_handoff_back_messages=True,
             output_mode="last_message"
         )
-
-        self.supervisor_agent = self.supervisor_agent.compile()
+        self.supervisor_agent = supervisor_builder.compile()
     
     def should_verify_customer(self, state: GraphInnerState) -> bool:
         if "customer_id" not in state or state["customer_id"] is None:
@@ -120,7 +119,7 @@ class CustomerQueryGraph:
     def build_graph(self):
         if not self.music_catalog_agent or not self.invoice_info_agent or not self.supervisor_agent:
             self.create_multi_agent_system()
-        
+
         self.summarization_node = SummarizationNode(
             model=ChatGroq(model=self.model_name),
             max_tokens=8000,
@@ -129,15 +128,20 @@ class CustomerQueryGraph:
             max_summary_tokens=4000,
         )
 
+        def supervisor_wrapper(state: GraphInnerState) -> GraphInnerState:
+            """Wrapper to ensure supervisor returns to parent graph flow"""
+            result = self.supervisor_agent.invoke(state)
+            return result
+
         graphBuilder = StateGraph(GraphInnerState)
         graphBuilder.add_node("summarize_conversation", self.summarization_node)
         graphBuilder.add_node("verify_customer", self.verification.verify_customer)
         graphBuilder.add_node("extract_preferences", self.preferences.extract_preferences)
-        graphBuilder.add_node("supervisor_agent", self.supervisor_agent)
+        graphBuilder.add_node("supervisor_agent", supervisor_wrapper)
         graphBuilder.add_node("save_preferences", self.preferences.save_preferences)
-        
+
         graphBuilder.add_edge(START, "summarize_conversation")
-        
+
         graphBuilder.add_edge("verify_customer", "extract_preferences")
         graphBuilder.add_edge("extract_preferences", "supervisor_agent")
         graphBuilder.add_edge("supervisor_agent", "save_preferences")
