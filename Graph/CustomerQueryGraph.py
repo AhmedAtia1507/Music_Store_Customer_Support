@@ -128,16 +128,11 @@ class CustomerQueryGraph:
             max_summary_tokens=4000,
         )
 
-        def supervisor_wrapper(state: GraphInnerState) -> GraphInnerState:
-            """Wrapper to ensure supervisor returns to parent graph flow"""
-            result = self.supervisor_agent.invoke(state)
-            return result
-
         graphBuilder = StateGraph(GraphInnerState)
         graphBuilder.add_node("summarize_conversation", self.summarization_node)
         graphBuilder.add_node("verify_customer", self.verification.verify_customer)
         graphBuilder.add_node("extract_preferences", self.preferences.extract_preferences)
-        graphBuilder.add_node("supervisor_agent", supervisor_wrapper)
+        graphBuilder.add_node("supervisor_agent", self.supervisor_agent)
         graphBuilder.add_node("save_preferences", self.preferences.save_preferences)
 
         graphBuilder.add_edge(START, "summarize_conversation")
